@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 import { Playfair_Display, Inter } from 'next/font/google'
 import { OceanRipples } from "@/components/ocean-ripples"
+import { Fish, Flame } from "lucide-react"
 
 const playfair = Playfair_Display({ 
   subsets: ['latin'],
@@ -345,18 +346,13 @@ export default function Page() {
         <section className="pt-0 pb-12 md:pb-16 px-6 bg-white">
           <div className="max-w-[1200px] mx-auto">
             <div className="text-center mb-16">
-              <h2 className={`text-3xl md:text-4xl font-medium mb-3 ${playfair.className}`}>Play Together. Stay Motivated</h2>
-              <p className="text-neutral-400 text-lg">Transform your ideas into reality with three simple prompts.</p>
+              <h2 className={`text-3xl md:text-4xl font-medium ${playfair.className}`}>Play Together. Stay Motivated</h2>
             </div>
 
             <div className="grid md:grid-cols-3 gap-6 relative max-w-5xl mx-auto md:items-stretch">
               <div className="bg-neutral-50 p-8 rounded-xl border border-neutral-200 hover:border-green-500/30 transition-colors group">
                 <div className="w-12 h-12 rounded-xl bg-green-500/10 text-green-400 flex items-center justify-center mb-6 group-hover:bg-green-500/20 transition-colors">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="7 10 12 15 17 10"/>
-                    <line x1="12" y1="15" x2="12" y2="3"/>
-                  </svg>
+                  <Fish className="w-6 h-6" strokeWidth={2} />
                 </div>
                 <h3 className={`text-xl font-medium mb-3 group-hover:text-green-400 transition-colors ${playfair.className}`}>Fish Together</h3>
                 <p className="text-neutral-400 leading-relaxed">
@@ -370,9 +366,7 @@ export default function Page() {
 
               <div className="bg-neutral-50 p-8 rounded-xl border border-neutral-200 hover:border-green-500/30 transition-colors group">
                 <div className="w-12 h-12 rounded-xl bg-green-500/10 text-green-400 flex items-center justify-center mb-6 group-hover:bg-green-500/20 transition-colors">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4z"/>
-                  </svg>
+                  <Flame className="w-6 h-6" strokeWidth={2} />
                 </div>
                 <h3 className={`text-xl font-medium mb-3 group-hover:text-green-400 transition-colors ${playfair.className}`}>Streaks</h3>
                 <p className="text-neutral-400 leading-relaxed">
