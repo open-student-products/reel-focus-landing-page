@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import { useEffect, useRef } from "react";
 
@@ -11,18 +11,34 @@ type Ripple = {
   width: number;
 };
 
+function readDarkMode(): boolean {
+  if (typeof document === "undefined") return false;
+  return document.documentElement.classList.contains("dark");
+}
+
 export function OceanRipples() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const ripplesRef = useRef<Ripple[]>([]);
   const lastSpawnRef = useRef<number>(0);
   const rafRef = useRef<number | null>(null);
+  const isDarkRef = useRef(false);
 
   useEffect(() => {
+    isDarkRef.current = readDarkMode();
+    const mo = new MutationObserver(() => {
+      isDarkRef.current = readDarkMode();
+    });
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas) {
+      return () => mo.disconnect();
+    }
 
     const ctx = canvas.getContext("2d", { alpha: true });
-    if (!ctx) return;
+    if (!ctx) {
+      return () => mo.disconnect();
+    }
 
     const getSize = () => {
       const parent = canvas.parentElement;
@@ -55,8 +71,9 @@ export function OceanRipples() {
         clientX > rect.right ||
         clientY < rect.top ||
         clientY > rect.bottom
-      )
+      ) {
         return;
+      }
 
       const now = performance.now();
       const minInterval = 45;
@@ -74,7 +91,6 @@ export function OceanRipples() {
         width: 1.25 + boost * 0.5,
       });
 
-      // Keep bounded
       if (ripplesRef.current.length > 40) {
         ripplesRef.current.splice(0, ripplesRef.current.length - 40);
       }
@@ -86,9 +102,9 @@ export function OceanRipples() {
     window.addEventListener("pointermove", onMove, { passive: true });
     window.addEventListener("pointerdown", onDown, { passive: true });
 
-    const drawWaves = (t: number, w: number, h: number) => {
+    const drawWaves = (t: number, w: number, h: number, isDark: boolean) => {
       const time = t * 0.00035;
-      ctx.globalAlpha = 0.18;
+      ctx.globalAlpha = isDark ? 0.12 : 0.18;
 
       for (let i = 0; i < 3; i++) {
         const yBase = h * (0.28 + i * 0.18);
@@ -102,7 +118,7 @@ export function OceanRipples() {
           const y = yBase + Math.sin(x * freq + phase) * amp;
           ctx.lineTo(x, y);
         }
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+        ctx.strokeStyle = isDark ? "rgba(165, 243, 252, 0.22)" : "rgba(255, 255, 255, 0.28)";
         ctx.lineWidth = 1;
         ctx.stroke();
       }
@@ -117,26 +133,38 @@ export function OceanRipples() {
         return;
       }
 
-      // Base ocean gradient
+      const isDark = isDarkRef.current;
+
       ctx.clearRect(0, 0, w, h);
       const g = ctx.createLinearGradient(0, 0, 0, h);
-      g.addColorStop(0, "#38bdf8"); // sky-400
-      g.addColorStop(0.45, "#0ea5e9"); // sky-500
-      g.addColorStop(1, "#0369a1"); // sky-700
+      if (isDark) {
+        g.addColorStop(0, "#155e75");
+        g.addColorStop(0.42, "#0e7490");
+        g.addColorStop(0.78, "#0f766e");
+        g.addColorStop(1, "#042f2e");
+      } else {
+        g.addColorStop(0, "#38bdf8");
+        g.addColorStop(0.45, "#0ea5e9");
+        g.addColorStop(1, "#0369a1");
+      }
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, w, h);
 
-      // Soft vignette + depth
       const v = ctx.createRadialGradient(w * 0.5, h * 0.1, 0, w * 0.5, h * 0.45, Math.max(w, h));
-      v.addColorStop(0, "rgba(255,255,255,0.14)");
-      v.addColorStop(0.55, "rgba(255,255,255,0.02)");
-      v.addColorStop(1, "rgba(0,0,0,0.18)");
+      if (isDark) {
+        v.addColorStop(0, "rgba(56, 189, 248, 0.1)");
+        v.addColorStop(0.45, "rgba(15, 23, 42, 0.28)");
+        v.addColorStop(1, "rgba(2, 6, 23, 0.72)");
+      } else {
+        v.addColorStop(0, "rgba(255,255,255,0.14)");
+        v.addColorStop(0.55, "rgba(255,255,255,0.02)");
+        v.addColorStop(1, "rgba(0,0,0,0.18)");
+      }
       ctx.fillStyle = v;
       ctx.fillRect(0, 0, w, h);
 
-      drawWaves(t, w, h);
+      drawWaves(t, w, h, isDark);
 
-      // Ripples
       const ripples = ripplesRef.current;
       ctx.save();
       ctx.globalCompositeOperation = "lighter";
@@ -145,16 +173,18 @@ export function OceanRipples() {
         r.r += r.speed;
         r.alpha *= 0.985;
 
+        const rippleA = isDark ? r.alpha * 0.75 : r.alpha;
+        const rim = isDark ? "165, 243, 252" : "255, 255, 255";
+
         ctx.beginPath();
         ctx.arc(r.x, r.y, r.r, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(255, 255, 255, ${r.alpha})`;
+        ctx.strokeStyle = `rgba(${rim}, ${rippleA})`;
         ctx.lineWidth = r.width;
         ctx.stroke();
 
-        // A second faint ring for realism
         ctx.beginPath();
         ctx.arc(r.x, r.y, r.r * 0.62, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(255, 255, 255, ${r.alpha * 0.45})`;
+        ctx.strokeStyle = `rgba(${rim}, ${rippleA * 0.45})`;
         ctx.lineWidth = Math.max(1, r.width - 0.4);
         ctx.stroke();
 
@@ -164,8 +194,7 @@ export function OceanRipples() {
       }
       ctx.restore();
 
-      // Gentle surface sheen
-      ctx.fillStyle = "rgba(255,255,255,0.04)";
+      ctx.fillStyle = isDark ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.04)";
       ctx.fillRect(0, 0, w, h);
 
       rafRef.current = requestAnimationFrame(tick);
@@ -175,6 +204,7 @@ export function OceanRipples() {
 
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      mo.disconnect();
       ro.disconnect();
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerdown", onDown);
@@ -184,9 +214,8 @@ export function OceanRipples() {
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 h-full w-full pointer-events-none"
+      className="pointer-events-none absolute inset-0 h-full w-full"
       aria-hidden="true"
     />
   );
 }
-
