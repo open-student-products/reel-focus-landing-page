@@ -1,0 +1,5 @@
+# Nixpacks: use Node 20 for Next.js 16 (matches local/tooling expectations).
+# https://nixpacks.com/docs/configuration/file
+
+[variables]
+NIXPACKS_NODE_VERSION = "20"

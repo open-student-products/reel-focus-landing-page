@@ -1,7 +1,7 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
 import { THEME_STORAGE_KEY, type ThemePreference } from "@/lib/theme-storage";
 import { cn } from "@/lib/utils";
@@ -11,16 +11,26 @@ type ThemeToggleProps = {
   variant?: "hero" | "default";
 };
 
+function subscribeDark(onChange: () => void) {
+  const el = document.documentElement;
+  const observer = new MutationObserver(onChange);
+  observer.observe(el, { attributes: true, attributeFilter: ["class"] });
+  return () => observer.disconnect();
+}
+
+function getDarkSnapshot() {
+  return document.documentElement.classList.contains("dark");
+}
+
+/** Matches server `<html className="dark">` + theme script default. */
+function getServerDarkSnapshot() {
+  return true;
+}
+
 export function ThemeToggle({ variant = "default" }: ThemeToggleProps) {
-  const [dark, setDark] = useState(false);
-  const [ready, setReady] = useState(false);
+  const dark = useSyncExternalStore(subscribeDark, getDarkSnapshot, getServerDarkSnapshot);
 
-  useEffect(() => {
-    setDark(document.documentElement.classList.contains("dark"));
-    setReady(true);
-  }, []);
-
-  const toggle = () => {
+  const toggle = useCallback(() => {
     const next = !document.documentElement.classList.contains("dark");
     document.documentElement.classList.toggle("dark", next);
     try {
@@ -29,14 +39,14 @@ export function ThemeToggle({ variant = "default" }: ThemeToggleProps) {
     } catch {
       /* ignore */
     }
-    setDark(next);
-  };
+  }, []);
 
   return (
     <Button
       type="button"
       variant="ghost"
       size="icon"
+      suppressHydrationWarning
       className={cn(
         "rounded-xl border transition-colors focus-visible:ring-2 focus-visible:ring-offset-2",
         variant === "hero"
@@ -47,12 +57,7 @@ export function ThemeToggle({ variant = "default" }: ThemeToggleProps) {
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
       aria-pressed={dark}
     >
-      {!ready ? (
-        <span
-          className={variant === "hero" ? "h-5 w-5 sm:h-6 sm:w-6" : "h-[1.125rem] w-[1.125rem]"}
-          aria-hidden
-        />
-      ) : dark ? (
+      {dark ? (
         <Sun
           className={variant === "hero" ? "h-5 w-5 sm:h-6 sm:w-6" : "h-[1.125rem] w-[1.125rem]"}
           strokeWidth={2}
