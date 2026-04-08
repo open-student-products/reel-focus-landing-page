@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { getThemeInitScript } from "@/lib/theme-script";
 import "./globals.css";
 
 const playfair = Playfair_Display({ 
@@ -57,9 +58,9 @@ export const metadata: Metadata = {
   },
   manifest: "/manifest.json",
   viewport: {
-    width: 'device-width',
-    initialScale: 1
-  }
+    width: "device-width",
+    initialScale: 1,
+  },
 };
 
 export default function RootLayout({
@@ -68,14 +69,15 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <head>
+        <script dangerouslySetInnerHTML={{ __html: getThemeInitScript() }} />
         <link rel="icon" type="image/png" sizes="32x32" href="/images/logo.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/images/logo.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="/images/logo.png" />
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className={`${inter.className} bg-white bg-dotted-grid-light`}>
+      <body className={`${inter.className} landing-page-surface min-h-screen antialiased`}>
         {children}
         <SpeedInsights />
       </body>
